@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"test_project/find"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,21 +31,6 @@ func connect(uri string) (*mongo.Client, context.Context, context.CancelFunc, er
 
 }
 
-// select database and collection with Client.Database method
-// and Database.Collection method
-func insertOne(client *mongo.Client, ctx context.Context, dataBase, col string, doc interface{}) (*mongo.InsertOneResult, error) {
-	collection := client.Database(dataBase).Collection(col)
-	result, err := collection.InsertOne(ctx, doc)
-	return result, err
-}
-
-func insertMany(client *mongo.Client, ctx context.Context, dataBase, col string, docs []interface{}) (*mongo.InsertManyResult, error) {
-	collection := client.Database(dataBase).Collection(col)
-
-	result, err := collection.InsertMany(ctx, docs)
-	return result, err
-}
-
 func ping(client *mongo.Client, ctx context.Context) error {
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		return err
@@ -63,50 +50,76 @@ func main() {
 
 	// creating a object of type interface to store
 	// the bson values, that we are inserting into database
-	var document interface{}
+	// var document interface{}
 
-	document = bson.D{
-		{"rollNo", 175},
-		{"maths", 80},
-		{"science", 90},
-		{"computer", 95},
+	// document = bson.D{
+	// 	{"rollNo", 175},
+	// 	{"maths", 80},
+	// 	{"science", 90},
+	// 	{"computer", 95},
+	// }
+
+	// insertOneResult, err := insert.InsertOne(client, ctx, "gfg", "marks", document)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("Result of InsertOne")
+	// fmt.Println(insertOneResult.InsertedID)
+
+	// var documents []interface{}
+
+	// documents = []interface{}{
+	// 	bson.D{
+	// 		{"rollNo", 153},
+	// 		{"maths", 65},
+	// 		{"science", 59},
+	// 		{"computer", 55},
+	// 	},
+	// 	bson.D{
+	// 		{"rollNo", 162},
+	// 		{"maths", 86},
+	// 		{"science", 80},
+	// 		{"computer", 69},
+	// 	},
+	// }
+
+	// insertManyResult, err := insert.InsertMany(client, ctx, "gfg", "marks", documents)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("Result of InsertMany")
+
+	// for id := range insertManyResult.InsertedIDs {
+	// 	fmt.Println(id)
+	// }
+
+	var filter, option interface{}
+
+	filter = bson.D{
+		{"maths", bson.D{{"$gt", 70}}},
 	}
 
-	insertOneResult, err := insertOne(client, ctx, "gfg", "marks", document)
+	option = bson.D{{"_id", 0}}
+
+	cursor, err := find.Query(client, ctx, "gfg", "marks", filter, option)
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Result of InsertOne")
-	fmt.Println(insertOneResult.InsertedID)
+	var resutls []bson.D
 
-	var documents []interface{}
-
-	documents = []interface{}{
-		bson.D{
-			{"rollNo", 153},
-			{"maths", 65},
-			{"science", 59},
-			{"computer", 55},
-		},
-		bson.D{
-			{"rollNo", 162},
-			{"maths", 86},
-			{"science", 80},
-			{"computer", 69},
-		},
-	}
-
-	insertManyResult, err := insertMany(client, ctx, "gfg", "marks", documents)
-
-	if err != nil {
+	if err := cursor.All(ctx, &resutls); err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Result of InsertMany")
-
-	for id := range insertManyResult.InsertedIDs {
-		fmt.Println(id)
+	fmt.Println("Query Result")
+	for _, doc := range resutls {
+		fmt.Println(doc)
 	}
+
 }
