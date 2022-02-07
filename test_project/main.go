@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"test_project/updating"
+	// "test_project/updating"
+	//"test_project/find"
+	//"test_project/insert"
+	"test_project/deletion"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -127,22 +130,50 @@ func main() {
 
 	// the field/columns of the documents that need to update
 
-	filter := bson.D{
-		{"maths", bson.D{{"$lt", 100}}},
-	}
+	// filter := bson.D{
+	// 	{"maths", bson.D{{"$lt", 100}}},
+	// }
 
-	update := bson.D{
-		{"$set", bson.D{
-			{"maths", 100},
-		}},
-	}
+	// update := bson.D{
+	// 	{"$set", bson.D{
+	// 		{"maths", 100},
+	// 	}},
+	// }
 
-	result, err := updating.UpdateMany(client, ctx, "gfg", "marks", filter, update)
+	// result, err := updating.UpdateMany(client, ctx, "gfg", "marks", filter, update)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("update multiple documents")
+	// fmt.Println(result.ModifiedCount)
+
+	///////////////////////////////////////////////////////////// deleting documents ////////////////////////////////////////
+
+	// query := bson.D{
+	// 	{"maths", bson.D{{"$gt", 60}}},
+	// }
+
+	// result, err := deletion.DeleteOne(client, ctx, "gfg", "marks", query)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("No.of rows affected by DeleteOne()")
+	// fmt.Println(result.DeletedCount)
+
+	query := bson.D{
+		{"science", bson.D{{"$gt", 100}}},
+	}
+	result, err := deletion.DeleteMany(client, ctx, "gfg", "marks", query)
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("update multiple documents")
-	fmt.Println(result.ModifiedCount)
+	fmt.Println("No.of rows affected by DeleteMany()")
+	fmt.Println(result.DeletedCount)
+
 }
