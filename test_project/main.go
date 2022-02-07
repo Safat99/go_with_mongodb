@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"test_project/find"
+	"test_project/updating"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -97,29 +97,52 @@ func main() {
 	// 	fmt.Println(id)
 	// }
 
-	var filter, option interface{}
+	///////////////////////////////////////////////// finding section ///////////////////////////////////
+	// var filter, option interface{}
 
-	filter = bson.D{
-		{"maths", bson.D{{"$gt", 70}}},
+	// filter = bson.D{
+	// 	{"maths", bson.D{{"$gt", 70}}},
+	// }
+
+	// option = bson.D{{"_id", 0}}
+
+	// cursor, err := find.Query(client, ctx, "gfg", "marks", filter, option)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// var resutls []bson.D
+
+	// if err := cursor.All(ctx, &resutls); err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("Query Result")
+	// for _, doc := range resutls {
+	// 	fmt.Println(doc)
+	// }
+
+	/////////////////////////////////////////// update values section //////////////////////////////////////////
+
+	// the field/columns of the documents that need to update
+
+	filter := bson.D{
+		{"maths", bson.D{{"$lt", 100}}},
 	}
 
-	option = bson.D{{"_id", 0}}
+	update := bson.D{
+		{"$set", bson.D{
+			{"maths", 100},
+		}},
+	}
 
-	cursor, err := find.Query(client, ctx, "gfg", "marks", filter, option)
+	result, err := updating.UpdateMany(client, ctx, "gfg", "marks", filter, update)
 
 	if err != nil {
 		panic(err)
 	}
 
-	var resutls []bson.D
-
-	if err := cursor.All(ctx, &resutls); err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Query Result")
-	for _, doc := range resutls {
-		fmt.Println(doc)
-	}
-
+	fmt.Println("update multiple documents")
+	fmt.Println(result.ModifiedCount)
 }
