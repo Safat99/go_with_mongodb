@@ -135,34 +135,63 @@ func EditAUser() http.HandlerFunc {
 	}
 }
 
-
-func DeleteAUser() http.HandlerFunc{
-	return func(rw http.ResponseWriter, r *http.Request){
-		ctx, cancel := context.WithTimeout(context.Background, 10 * timne.Second)
+func DeleteAUser() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		params := mux.Vars(r)
 		userId := params["userId"]
 		defer cancel()
 		objId, _ := primitive.ObjectIDFromHex(userId)
-		
-		result , err := userCollection.DeleteOne(ctx, bson.M{"id": objId})
+
+		result, err := userCollection.DeleteOne(ctx, bson.M{"id": objId})
 
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
-			response := responses.UserResponse{Status:http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}}
-
+			response := responses.UserResponse{Status: http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}}
+			json.NewEncoder(rw).Encode(response)
+			return
 		}
 
 		if result.DeletedCount < 1 {
 			rw.WriteHeader(http.StatusNotFound)
-			respnose := responses.UserResponse{Status: http.StatusNotFound, Message: "error", Data: map[string]interface{}{"data": "User with specified ID not found!"}}
+			response := responses.UserResponse{Status: http.StatusNotFound, Message: "error", Data: map[string]interface{}{"data": "User with specified ID not found!"}}
+			json.NewEncoder(rw).Encode(response)
+			return
 		}
 		rw.WriteHeader(http.StatusOK)
-		response := response.UserResponse{"Staus": http.StatusOK, Message: "error", Data: map[string]interface{}{"data": "User successfully deleted!!"}
+		response := responses.UserResponse{Status: http.StatusOK, Message: "error", Data: map[string]interface{}{"data": "User successfully deleted!!"}}
 		json.NewEncoder(rw).Encode(response)
 	}
 }
 
+func GetAllUser() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		var users []models.User
+		defer cancel()
 
+		results, err := userCollection.Find(ctx, bson.M{})
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			response := responses.UserResponse{Status: http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}}
+			json.NewEncoder(rw).Encode(response)
+			return
+		}
 
+		//reading from the db in an optmial way >> ?
+		defer results.Close(ctx)
+		for results.Next(ctx) {
+			var singleUser models.User
+			if err = results.Decode(&singleUser); err != nil {
+				rw.WriteHeader(http.StatusInternalServerError)
+				response := responses.UserResponse{Status: http.StatusInternalServerError, Message: "error", Data: map[string]interface{}{"data": err.Error()}}
+				json.NewEncoder(rw).Encode(response)
+			}
+			users = append(users, singleUser)
+		}
 
-
+		rw.WriteHeader(http.StatusOK)
+		response := responses.UserResponse{Status: http.StatusOK, Message: "success", Data: map[string]interface{}{"data": users}}
+		json.NewEncoder(rw).Encode(response)
+	}
+}
